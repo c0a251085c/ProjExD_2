@@ -50,6 +50,21 @@ def gameover(scrren: pg.Surface) -> None:
     time.sleep(5)
 
 
+def init_bb_imgs() -> tuple[list[pg.Surface], list[int]]:
+    bb_imgs = []
+    bb_accs = [a for a in range(1, 11)] # 加速度のリスト [1, 2, ..., 10]
+    
+    for r in range(1, 11):
+        bb_img = pg.Surface((20*r, 20*r))
+        bb_img.set_colorkey((0, 0, 0))
+        pg.draw.circle(bb_img, (255, 0, 0), (10*r, 10*r), 10*r)
+        bb_imgs.append(bb_img)
+        
+    return bb_imgs, bb_accs
+    
+       
+
+
     
 
 def main():
@@ -70,6 +85,10 @@ def main():
 
     clock = pg.time.Clock()
     tmr = 0
+
+    bb_imgs, bb_accs = init_bb_imgs()
+    bb_img = bb_imgs[0] # 初期画像を設定
+
     while True:
         for event in pg.event.get():
             if event.type == pg.QUIT: 
@@ -110,6 +129,15 @@ def main():
         tmr += 1
         clock.tick(50)
 
+        avx = vx * bb_accs[min(tmr // 500, 9)] # 現在の加速度を反映した速度
+        avy = vy * bb_accs[min(tmr // 500, 9)]
+        bb_img = bb_imgs[min(tmr // 500, 9)]
+
+        # Surfaceの大きさが変わったら、Rectのサイズも更新する
+        bb_rct.width = bb_img.get_rect().width
+        bb_rct.height = bb_img.get_rect().height
+        
+        bb_rct.move_ip(avx, avy) # vx, vy の代わりに avx, avy を使う
 
 if __name__ == "__main__":
     pg.init()
