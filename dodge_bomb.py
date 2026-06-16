@@ -3,6 +3,7 @@ import random
 import sys
 import pygame as pg
 import time
+import math
 
 
 WIDTH, HEIGHT = 1100, 650
@@ -84,7 +85,24 @@ def get_kk_imgs() -> dict[tuple[int, int], pg.Surface]:
     return kk_dict
     
        
-
+def calc_orientation(org: pg.Rect, dst: pg.Rect, current_xy: tuple[float, float]) -> tuple[float, float]:
+    """
+    爆弾がこうかとんに向かって移動するベクトルを計算する
+    """
+    dx = dst.centerx - org.centerx
+    dy = dst.centery - org.centery
+    norm = math.sqrt(dx**2 + dy**2)
+    
+    # 距離が300未満なら、慣性として計算前の方向ベクトルを返す
+    if norm < 300:
+        return current_xy
+        
+    # ノルムが√50になるように正規化する
+    target_norm = math.sqrt(50)
+    vx = (dx / norm) * target_norm
+    vy = (dy / norm) * target_norm
+    
+    return vx, vy
 
     
 
@@ -154,6 +172,8 @@ def main():
         pg.display.update()
         tmr += 1
         clock.tick(50)
+
+        vx, vy = calc_orientation(bb_rct, kk_rct, (vx, vy))
 
         avx = vx * bb_accs[min(tmr // 500, 9)] # 現在の加速度を反映した速度
         avy = vy * bb_accs[min(tmr // 500, 9)]
